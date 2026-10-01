@@ -49,6 +49,7 @@ function initSupabase({
   channelName = "coucou-badsha-ayzil",
   userName = "Badsha",
   userRole = "me",
+  onChatMessage,
   onFileShared,
   onScheduleUpdated,
   onPresenceSync,
@@ -73,7 +74,7 @@ function initSupabase({
 
     realtimeChannel = supabaseClient.channel(channelName, {
       config: {
-        broadcast: { self: false },
+        broadcast: { ack: false, self: false },
         presence: { key: userName },
       },
     });
@@ -81,26 +82,50 @@ function initSupabase({
     // 1. Broadcast: File Sharing
     realtimeChannel.on("broadcast", { event: "file_shared" }, ({ payload }) => {
       console.log("[Supabase Realtime] Received file_shared event:", payload?.fileName);
-      if (onFileShared && payload) onFileShared(payload);
+      if (typeof onFileShared === "function" && payload) {
+        try {
+          onFileShared(payload);
+        } catch (e) {
+          console.warn("[Supabase Realtime] onFileShared error:", e);
+        }
+      }
     });
 
     // 2. Broadcast: Schedule & Task Updates
     realtimeChannel.on("broadcast", { event: "schedule_update" }, ({ payload }) => {
       console.log("[Supabase Realtime] Received schedule_update event from:", payload?.senderName);
-      if (onScheduleUpdated && payload) onScheduleUpdated(payload);
+      if (typeof onScheduleUpdated === "function" && payload) {
+        try {
+          onScheduleUpdated(payload);
+        } catch (e) {
+          console.warn("[Supabase Realtime] onScheduleUpdated error:", e);
+        }
+      }
     });
 
     // 3. Presence: Partner Online Status
     realtimeChannel.on("presence", { event: "sync" }, () => {
       const state = realtimeChannel.presenceState();
       console.log("[Supabase Realtime] Presence sync:", Object.keys(state));
-      if (onPresenceSync) onPresenceSync(state);
+      if (typeof onPresenceSync === "function") {
+        try {
+          onPresenceSync(state);
+        } catch (e) {
+          console.warn("[Supabase Realtime] onPresenceSync error:", e);
+        }
+      }
     });
 
     // 4. Broadcast: Live Partner Chat
     realtimeChannel.on("broadcast", { event: "partner_chat" }, ({ payload }) => {
-      console.log("[Supabase Realtime] Received partner_chat event from:", payload?.sender);
-      if (onChatMessage && payload) onChatMessage(payload);
+      console.log("[Supabase Realtime] Received partner_chat event from:", payload?.sender, payload?.text);
+      if (typeof onChatMessage === "function" && payload) {
+        try {
+          onChatMessage(payload);
+        } catch (e) {
+          console.error("[Supabase Realtime] onChatMessage error:", e);
+        }
+      }
     });
 
     // Subscribe and track self

@@ -132,9 +132,10 @@ export function buildCoupleChat(actions: ViewActions): ViewHost {
 
       // Sender tag for partner messages
       if (!isFromMe) {
+        const displaySender = msg.sender ? (msg.sender.charAt(0).toUpperCase() + msg.sender.slice(1)) : partnerName;
         const senderTag = h("div", {
           style: "font-size:10.5px;font-weight:700;color:#f43f5e;margin-bottom:2px;",
-          text: `${partnerName} ${partnerIcon}`,
+          text: `${displaySender} ${partnerIcon}`,
         });
         bubbleEl.append(senderTag);
       }

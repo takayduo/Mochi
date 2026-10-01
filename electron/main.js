@@ -294,6 +294,13 @@ function startSupabaseSync() {
       console.log("[Supabase Sync] Incoming chat message:", payload?.text);
       if (!payload || !payload.text) return;
 
+      if (!payload.id) {
+        payload.id = "msg_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
+      }
+      if (!payload.timestamp) {
+        payload.timestamp = Date.now();
+      }
+
       const history = loadChatHistory();
       const exists = history.some((m) => m.id === payload.id);
       if (!exists) {
@@ -308,8 +315,9 @@ function startSupabaseSync() {
         overlayWin.webContents.send("partner-chat-received", payload);
       }
 
-      // Windows Action Center native notification if collapsed
-      if (isCollapsed && Notification.isSupported()) {
+      // Windows Action Center native notification if collapsed or app unfocused
+      const isUnfocused = !overlayWin || overlayWin.isDestroyed() || !overlayWin.isFocused();
+      if ((isCollapsed || isUnfocused) && Notification.isSupported()) {
         try {
           const sender = payload.sender || partnerUserName;
           const notif = new Notification({

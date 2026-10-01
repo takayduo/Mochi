@@ -69,7 +69,7 @@ async function main() {
       State.unreadPartnerChatCount = 0;
     } else {
       Sound.play("love");
-      island.engine.triggerEmote("love");
+      State.triggerEmote("love");
       if (isFromPartner) {
         State.unreadPartnerChatCount++;
       }

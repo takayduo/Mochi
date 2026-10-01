@@ -221,32 +221,36 @@ function coupleSection(): HTMLElement {
 
   const userNameInput = h("input", {
     type: "text",
-    value: settings.userName || "Me",
-    placeholder: "e.g. Alex",
+    value: settings.userName || "Badsha",
+    placeholder: "e.g. Badsha",
   }) as HTMLInputElement;
-  userNameInput.addEventListener("change", () => {
-    settings.userName = userNameInput.value.trim() || "Me";
+  const saveUserName = () => {
+    settings.userName = userNameInput.value.trim() || "Badsha";
     void save();
-  });
+  };
+  userNameInput.addEventListener("change", saveUserName);
+  userNameInput.addEventListener("blur", saveUserName);
 
   const partnerNameInput = h("input", {
     type: "text",
-    value: settings.partnerName || "Her",
-    placeholder: "e.g. Maya",
+    value: settings.partnerName || "Ayzil",
+    placeholder: "e.g. Ayzil",
   }) as HTMLInputElement;
-  partnerNameInput.addEventListener("change", () => {
-    settings.partnerName = partnerNameInput.value.trim() || "Her";
+  const savePartnerName = () => {
+    settings.partnerName = partnerNameInput.value.trim() || "Ayzil";
     void save();
-  });
+  };
+  partnerNameInput.addEventListener("change", savePartnerName);
+  partnerNameInput.addEventListener("blur", savePartnerName);
 
   body.append(
     h("div", {
       class: "hint",
-      text: "Configure who this computer belongs to. When your girlfriend opens her PC, she can switch her profile to 'Her' and schedule tasks for you directly!",
+      text: "Configure couple identity. Keep Creator and Partner names the same on both computers, then simply select 'This is My PC (Me 👤)' on your computer and 'This is Her PC (Her 💖)' on her computer.",
     }),
     h("div", { class: "row", style: "gap:10px" }, roleMe, roleHer),
-    h("div", { class: "row" }, h("label", { text: "Your Name" }), userNameInput),
-    h("div", { class: "row" }, h("label", { text: "Partner's Name" }), partnerNameInput)
+    h("div", { class: "row" }, h("label", { text: "Creator Name (Me 👤)" }), userNameInput),
+    h("div", { class: "row" }, h("label", { text: "Partner Name (Her 💖)" }), partnerNameInput)
   );
 
   return section;
