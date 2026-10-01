@@ -50,34 +50,56 @@ Before installing Mochi, make sure you have:
 
 ---
 
-## 🚀 Easy Installation Guide (Works on Any PC)
+## 🚀 Easy Installation Guide (Works on Any PC — Even Brand New!)
 
-Setting up Mochi takes less than 2 minutes:
+You do **not** need Git or programming experience to run Mochi. Choose whichever method is easiest for you:
 
-### 1. Clone the Repository
-Open PowerShell or your terminal and run:
+---
+
+### 🌟 Method 1: 1-Line Automatic Installer (Fastest & Recommended)
+Works on any fresh Windows 10/11 PC or Windows Sandbox (even with **no Git** and **no Node.js** installed):
+
+1. Press `Win + X` and click **Terminal** or **Windows PowerShell**.
+2. Paste this single command and press `Enter`:
+   ```powershell
+   irm https://raw.githubusercontent.com/takayduo/Mochi/main/install.ps1 | iex
+   ```
+3. That's it! The script will:
+   - Auto-install Node.js if missing.
+   - Download the latest Mochi files (no Git needed).
+   - Install packages and build the desktop app.
+   - Create a **Mochi** shortcut on your Desktop and launch it immediately.
+
+---
+
+### 📦 Method 2: Download ZIP (Zero Terminal Typing)
+If you prefer not using commands at all:
+
+1. Click the green **`<> Code`** button at the top of this GitHub page and select **`Download ZIP`**.
+2. Right-click the downloaded `Mochi-main.zip` $\rightarrow$ click **Extract All…** $\rightarrow$ Extract.
+3. Open the extracted folder and double-click **`setup.bat`**.
+4. The batch installer will auto-configure everything and create a desktop shortcut for you!
+
+---
+
+### 💻 Method 3: For Developers & Terminal Users (Git & NPM)
+If you already have Git and Node.js LTS installed:
+
 ```bash
 git clone https://github.com/takayduo/Mochi.git
 cd Mochi
-```
-
-### 2. Install Dependencies
-Run npm to install all required packages:
-```bash
 npm install
+npm run build
+npm start
 ```
 
-### 3. Launch Mochi
-You can start Mochi using either of the following:
+---
 
-- **Option A (One-Click Windows Launcher)**:
-  - Double-click **`Launch Coucou.bat`** (opens terminal and starts Mochi).
-  - Or double-click **`Launch Coucou Silent.vbs`** (launches silently in the background with no terminal window).
-
-- **Option B (Terminal Command)**:
-  ```bash
-  npm start
-  ```
+## 🖥️ How to Run After Installation
+Once installed, you can launch Mochi anytime:
+- **Desktop Shortcut**: Double-click the **Mochi** icon on your Desktop.
+- **Silent Launch**: Double-click `Launch Coucou Silent.vbs` (runs in the background with no terminal window).
+- **Standard Launch**: Double-click `Launch Coucou.bat`.
 
 ---
 
