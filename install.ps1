@@ -1,5 +1,15 @@
 # 🍡 Mochi — 1-Click Automated Installer for Any Windows PC
 $ErrorActionPreference = "Stop"
+$ProgressPreference = "SilentlyContinue"
+
+function Download-Fast($url, $dest) {
+    if (Get-Command curl.exe -ErrorAction SilentlyContinue) {
+        & curl.exe -sSL "$url" -o "$dest"
+    } else {
+        $wc = New-Object System.Net.WebClient
+        $wc.DownloadFile($url, $dest)
+    }
+}
 
 Write-Host ""
 Write-Host "===================================================" -ForegroundColor Magenta
@@ -40,7 +50,7 @@ if (-not $nodeCmd) {
         $msiUrl = "https://nodejs.org/dist/v22.14.0/node-v22.14.0-x64.msi"
         $msiDest = "$env:TEMP\nodejs_lts.msi"
         Write-Host "      Downloading official Node.js 22 LTS installer from nodejs.org..." -ForegroundColor Gray
-        Invoke-WebRequest -Uri $msiUrl -OutFile $msiDest
+        Download-Fast $msiUrl $msiDest
         Write-Host "      Installing Node.js..." -ForegroundColor Gray
         Start-Process msiexec.exe -ArgumentList "/i `"$msiDest`" /passive /norestart" -Wait
     }
@@ -70,7 +80,7 @@ $zipUrl = "https://github.com/takayduo/Mochi/archive/refs/heads/main.zip"
 $zipFile = "$env:TEMP\Mochi_Latest.zip"
 $extractTemp = "$env:TEMP\Mochi_Extract"
 
-Invoke-WebRequest -Uri $zipUrl -OutFile $zipFile
+Download-Fast $zipUrl $zipFile
 
 if (Test-Path $extractTemp) {
     Remove-Item -Recurse -Force $extractTemp
@@ -111,7 +121,7 @@ if (-not (Test-Path $electronExe)) {
     $electronZipPath = "$env:TEMP\electron-v$electronVersion.zip"
     
     Write-Host "      Downloading Electron v$electronVersion binary directly..." -ForegroundColor Gray
-    Invoke-WebRequest -Uri $electronZipUrl -OutFile $electronZipPath
+    Download-Fast $electronZipUrl $electronZipPath
     
     if (-not (Test-Path $electronDist)) {
         New-Item -ItemType Directory -Path $electronDist -Force | Out-Null
