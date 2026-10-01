@@ -132,7 +132,7 @@ const startupFolderPath = path.join(
   "Programs",
   "Startup"
 );
-const startupScriptPath = path.join(startupFolderPath, "CoucouCreator.vbs");
+const startupShortcutPath = path.join(startupFolderPath, "Mochi.lnk");
 
 function applyStartupMode(enabled) {
   try {
@@ -153,26 +153,42 @@ function applyStartupMode(enabled) {
       console.warn("[Startup Mode] app.setLoginItemSettings warning:", e);
     }
 
-    // 2. Windows Startup Folder VBS Script (silent windowless execution fallback)
+    // 2. Windows Startup Folder .lnk Shortcut (native GUI, zero .vbs)
     try {
       if (!fs.existsSync(startupFolderPath)) {
         fs.mkdirSync(startupFolderPath, { recursive: true });
       }
+
+      // Cleanup legacy .vbs if present
+      const legacyVbs = path.join(startupFolderPath, "CoucouCreator.vbs");
+      if (fs.existsSync(legacyVbs)) {
+        try { fs.unlinkSync(legacyVbs); } catch {}
+      }
+
       if (enabled) {
-        const cmdToRun = isPackaged
-          ? `""${execPath}""`
-          : `""${execPath}"" ""${appDir}""`;
-        const vbsContent = `Set WshShell = CreateObject("WScript.Shell")\r\nWshShell.Run "${cmdToRun}", 0, False\r\n`;
-        fs.writeFileSync(startupScriptPath, vbsContent, "utf-8");
-        console.log(`[Startup Mode] Created startup script at: ${startupScriptPath}`);
+        const psScript = `
+          $wsh = New-Object -ComObject WScript.Shell;
+          $s = $wsh.CreateShortcut('${startupShortcutPath.replace(/'/g, "''")}');
+          $s.TargetPath = '${execPath.replace(/'/g, "''")}';
+          $s.Arguments = '${(isPackaged ? "" : appDir).replace(/'/g, "''")}';
+          $s.WorkingDirectory = '${appDir.replace(/'/g, "''")}';
+          $icon = '${path.join(appDir, "public", "icons", "icon.ico").replace(/'/g, "''")}';
+          if (Test-Path $icon) { $s.IconLocation = "$icon,0" };
+          $s.Save();
+        `;
+        exec(`powershell -NoProfile -Command "${psScript.replace(/\r?\n/g, " ")}"`, (psErr) => {
+          if (!psErr) {
+            console.log(`[Startup Mode] Created startup shortcut at: ${startupShortcutPath}`);
+          }
+        });
       } else {
-        if (fs.existsSync(startupScriptPath)) {
-          fs.unlinkSync(startupScriptPath);
-          console.log(`[Startup Mode] Removed startup script from: ${startupScriptPath}`);
+        if (fs.existsSync(startupShortcutPath)) {
+          fs.unlinkSync(startupShortcutPath);
+          console.log(`[Startup Mode] Removed startup shortcut from: ${startupShortcutPath}`);
         }
       }
     } catch (fsErr) {
-      console.warn("[Startup Mode] Startup folder script error:", fsErr);
+      console.warn("[Startup Mode] Startup folder shortcut error:", fsErr);
     }
 
     console.log(`[Startup Mode] Windows auto-start set to: ${!!enabled}`);

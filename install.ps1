@@ -37,9 +37,9 @@ if (-not $nodeCmd) {
         }
     }
     if (-not $installed) {
-        $msiUrl = "https://nodejs.org/dist/v20.18.0/node-v20.18.0-x64.msi"
+        $msiUrl = "https://nodejs.org/dist/v22.14.0/node-v22.14.0-x64.msi"
         $msiDest = "$env:TEMP\nodejs_lts.msi"
-        Write-Host "      Downloading official Node.js installer from nodejs.org..." -ForegroundColor Gray
+        Write-Host "      Downloading official Node.js 22 LTS installer from nodejs.org..." -ForegroundColor Gray
         Invoke-WebRequest -Uri $msiUrl -OutFile $msiDest
         Write-Host "      Installing Node.js..." -ForegroundColor Gray
         Start-Process msiexec.exe -ArgumentList "/i `"$msiDest`" /passive /norestart" -Wait
@@ -93,14 +93,23 @@ Set-Location -Path $installFolder
 Write-Host "[4/5] Building application bundle..." -ForegroundColor Yellow
 & $npmExe run build
 
-# 5. Create Desktop Shortcut
+# 5. Create Desktop Shortcut (points directly to native electron.exe - no .vbs!)
 Write-Host "[5/5] Creating Desktop Shortcut..." -ForegroundColor Yellow
 $desktopPath = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::Desktop)
 $shortcutPath = Join-Path $desktopPath "Mochi.lnk"
+$electronExe = Join-Path $installFolder "node_modules\electron\dist\electron.exe"
 
 $wsh = New-Object -ComObject WScript.Shell
 $shortcut = $wsh.CreateShortcut($shortcutPath)
-$shortcut.TargetPath = Join-Path $installFolder "Launch Coucou Silent.vbs"
+
+if (Test-Path $electronExe) {
+    $shortcut.TargetPath = $electronExe
+    $shortcut.Arguments = "."
+} else {
+    $shortcut.TargetPath = "cmd.exe"
+    $shortcut.Arguments = "/c `"$installFolder\Launch Mochi.bat`""
+}
+
 $shortcut.WorkingDirectory = $installFolder
 $iconFile = Join-Path $installFolder "public\icons\icon.ico"
 if (Test-Path $iconFile) {
@@ -118,4 +127,8 @@ Write-Host "===================================================" -ForegroundColo
 Write-Host ""
 Write-Host "Launching Mochi now..." -ForegroundColor Cyan
 
-Start-Process "wscript.exe" -ArgumentList "`"$installFolder\Launch Coucou Silent.vbs`""
+if (Test-Path $electronExe) {
+    Start-Process -FilePath $electronExe -ArgumentList "." -WorkingDirectory $installFolder
+} else {
+    Start-Process -FilePath "cmd.exe" -ArgumentList "/c `"$installFolder\Launch Mochi.bat`"" -WindowStyle Hidden
+}

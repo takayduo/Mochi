@@ -98,8 +98,8 @@ npm start
 ## 🖥️ How to Run After Installation
 Once installed, you can launch Mochi anytime:
 - **Desktop Shortcut**: Double-click the **Mochi** icon on your Desktop.
-- **Silent Launch**: Double-click `Launch Coucou Silent.vbs` (runs in the background with no terminal window).
-- **Standard Launch**: Double-click `Launch Coucou.bat`.
+- **Direct Launcher**: Double-click **`Launch Mochi.bat`** (instantly starts Mochi in background and closes the prompt).
+- **Terminal Launch**: Run `npm start` or `npm run app`.
 
 ---
 
@@ -163,8 +163,9 @@ Mochi/
 │   ├── icons/                 # App and system tray icons (.ico, .png)
 │   └── sounds/                # 28 handcrafted .wav audio sound effects
 │
-├── Launch Coucou.bat          # Standard Windows launcher
-├── Launch Coucou Silent.vbs   # Silent, windowless background launcher
+├── install.ps1                # 1-line PowerShell installer (no Git/Node needed)
+├── setup.bat                  # 1-click batch installer & dependency setup
+├── Launch Mochi.bat           # 1-click Windows background launcher
 ├── package.json               # Node.js dependencies & scripts
 ├── tsconfig.json              # TypeScript compilation settings
 ├── vite.config.ts             # Vite multi-page build configuration
