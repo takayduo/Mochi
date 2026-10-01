@@ -23,22 +23,41 @@ if (-not $nodeCmd) {
 
 if (-not $nodeCmd) {
     Write-Host "      Node.js not detected. Installing Node.js LTS automatically..." -ForegroundColor Cyan
+    $installed = $false
     $wingetCmd = Get-Command winget -ErrorAction SilentlyContinue
     if ($wingetCmd) {
-        Write-Host "      Using Windows Package Manager (winget)..." -ForegroundColor Gray
-        Start-Process winget -ArgumentList "install OpenJS.NodeJS.LTS --silent --accept-package-agreements --accept-source-agreements" -Wait
-    } else {
+        Write-Host "      Checking Windows Package Manager (winget)..." -ForegroundColor Gray
+        try {
+            $p = Start-Process winget -ArgumentList "install OpenJS.NodeJS.LTS --silent --accept-package-agreements --accept-source-agreements" -Wait -PassThru
+            if (Test-Path "$env:ProgramFiles\nodejs\node.exe") {
+                $installed = $true
+            }
+        } catch {
+            $installed = $false
+        }
+    }
+    if (-not $installed) {
         $msiUrl = "https://nodejs.org/dist/v20.18.0/node-v20.18.0-x64.msi"
         $msiDest = "$env:TEMP\nodejs_lts.msi"
-        Write-Host "      Downloading Node.js installer from nodejs.org..." -ForegroundColor Gray
+        Write-Host "      Downloading official Node.js installer from nodejs.org..." -ForegroundColor Gray
         Invoke-WebRequest -Uri $msiUrl -OutFile $msiDest
-        Write-Host "      Running installer..." -ForegroundColor Gray
+        Write-Host "      Installing Node.js..." -ForegroundColor Gray
         Start-Process msiexec.exe -ArgumentList "/i `"$msiDest`" /passive /norestart" -Wait
     }
     $env:Path = "$env:ProgramFiles\nodejs;$env:APPDATA\npm;" + $env:Path
 }
 
-Write-Host "      ✓ Node.js is ready: $(node -v)" -ForegroundColor Green
+$npmExe = "npm"
+if (Test-Path "$env:ProgramFiles\nodejs\npm.cmd") {
+    $npmExe = "$env:ProgramFiles\nodejs\npm.cmd"
+}
+if (Test-Path "$env:ProgramFiles\nodejs\node.exe") {
+    $nodeExe = "$env:ProgramFiles\nodejs\node.exe"
+} else {
+    $nodeExe = "node"
+}
+
+Write-Host "      ✓ Node.js is ready: $(& $nodeExe -v)" -ForegroundColor Green
 
 # 2. Download Mochi from GitHub
 Write-Host "[2/5] Downloading Mochi from GitHub..." -ForegroundColor Yellow
@@ -68,12 +87,11 @@ Write-Host "      ✓ Downloaded into $installFolder" -ForegroundColor Green
 Write-Host "[3/5] Installing packages (npm install)..." -ForegroundColor Yellow
 Set-Location -Path $installFolder
 
-# Execute npm install via cmd to ensure smooth PATH pickup
-cmd /c "npm install"
+& $npmExe install
 
 # 4. Build Mochi
 Write-Host "[4/5] Building application bundle..." -ForegroundColor Yellow
-cmd /c "npm run build"
+& $npmExe run build
 
 # 5. Create Desktop Shortcut
 Write-Host "[5/5] Creating Desktop Shortcut..." -ForegroundColor Yellow
