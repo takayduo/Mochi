@@ -46,15 +46,17 @@ if %ERRORLEVEL% NEQ 0 (
 echo [OK] Node.js is ready!
 echo.
 
-:: 2. Install dependencies if node_modules is missing
-if not exist "node_modules" (
-    echo [*] Installing Mochi dependencies (this only happens once)...
+:: 2. Install dependencies
+if not exist "node_modules\electron\dist\electron.exe" (
+    echo [*] Installing Mochi dependencies...
+    if exist "package-lock.json" del /f /q "package-lock.json" 2>nul
     call npm install
-    if !ERRORLEVEL! NEQ 0 (
-        echo [ERROR] npm install encountered an issue.
-        pause
-        exit /b 1
-    )
+)
+
+:: Verify electron binary was extracted successfully
+if not exist "node_modules\electron\dist\electron.exe" (
+    echo [*] Downloading Electron binary directly...
+    powershell -NoProfile -Command "$v = '44.5.1'; if (Test-Path 'node_modules\electron\package.json') { $v = (Get-Content 'node_modules\electron\package.json' -Raw | ConvertFrom-Json).version }; $zip = \"$env:TEMP\electron.zip\"; Invoke-WebRequest -Uri \"https://github.com/electron/electron/releases/download/v$v/electron-v$v-win32-x64.zip\" -OutFile $zip; if (-not (Test-Path 'node_modules\electron\dist')) { New-Item -ItemType Directory -Path 'node_modules\electron\dist' -Force | Out-Null }; Expand-Archive -Path $zip -DestinationPath 'node_modules\electron\dist' -Force; Set-Content -Path 'node_modules\electron\path.txt' -Value 'electron.exe' -NoNewline; Remove-Item -Force $zip -ErrorAction SilentlyContinue" >nul 2>nul
 )
 
 :: 3. Build Mochi

@@ -87,7 +87,40 @@ Write-Host "      ✓ Downloaded into $installFolder" -ForegroundColor Green
 Write-Host "[3/5] Installing packages (npm install)..." -ForegroundColor Yellow
 Set-Location -Path $installFolder
 
+if (Test-Path "$installFolder\package-lock.json") {
+    Remove-Item -Force "$installFolder\package-lock.json" -ErrorAction SilentlyContinue
+}
+
 & $npmExe install
+
+# Ensure Electron binary is fully extracted (bypasses npm bug #4828 on clean Windows)
+$electronDist = Join-Path $installFolder "node_modules\electron\dist"
+$electronExe = Join-Path $electronDist "electron.exe"
+
+if (-not (Test-Path $electronExe)) {
+    Write-Host "      Configuring Electron binary..." -ForegroundColor Cyan
+    $electronPkgPath = Join-Path $installFolder "node_modules\electron\package.json"
+    if (Test-Path $electronPkgPath) {
+        $electronPkg = Get-Content $electronPkgPath -Raw | ConvertFrom-Json
+        $electronVersion = $electronPkg.version
+    } else {
+        $electronVersion = "44.5.1"
+    }
+    
+    $electronZipUrl = "https://github.com/electron/electron/releases/download/v$electronVersion/electron-v$electronVersion-win32-x64.zip"
+    $electronZipPath = "$env:TEMP\electron-v$electronVersion.zip"
+    
+    Write-Host "      Downloading Electron v$electronVersion binary directly..." -ForegroundColor Gray
+    Invoke-WebRequest -Uri $electronZipUrl -OutFile $electronZipPath
+    
+    if (-not (Test-Path $electronDist)) {
+        New-Item -ItemType Directory -Path $electronDist -Force | Out-Null
+    }
+    Expand-Archive -Path $electronZipPath -DestinationPath $electronDist -Force
+    Set-Content -Path (Join-Path $installFolder "node_modules\electron\path.txt") -Value "electron.exe" -NoNewline
+    Remove-Item -Force $electronZipPath -ErrorAction SilentlyContinue
+    Write-Host "      ✓ Electron binary ready: $electronExe" -ForegroundColor Green
+}
 
 # 4. Build Mochi
 Write-Host "[4/5] Building application bundle..." -ForegroundColor Yellow
